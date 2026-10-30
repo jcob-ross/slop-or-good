@@ -17,21 +17,17 @@ pub fn main(init: std.process.Init) !void {
 
     const idx = std.mem.lastIndexOfAny(u8, path_bin, "/\\") orelse return;
     const name_bin = path_bin[idx + 1 ..];
-    // std.log.info("binary name: {s}", .{name_bin});
 
     const Binary = enum { good, slop, note, unknown };
     const binary = std.meta.stringToEnum(Binary, name_bin) orelse .unknown;
     switch (binary) {
         .good => {
-            // std.log.info("good ...", .{});
             try write(init, arena, path_good, args);
         },
         .slop => {
-            // std.log.info("slop ...", .{});
             try write(init, arena, path_slop, args);
         },
         .note => {
-            // std.log.info("note ...", .{});
             try write(init, arena, path_note, args);
         },
         .unknown => return,
@@ -59,6 +55,7 @@ fn write(init: std.process.Init, arena: std.mem.Allocator, path: []const u8, arg
     var args_len: usize = if (tail.len > 0) tail.len - 1 else 0;
     for (tail) |arg| args_len += arg.len;
 
+    // this is ridiculous (I wanted a fixed-length timestamp)
     var timestamp_buf: [20]u8 = undefined;
     const timestamp = blk: {
         const now = std.Io.Clock.real.now(init.io);
@@ -84,7 +81,7 @@ fn write(init: std.process.Init, arena: std.mem.Allocator, path: []const u8, arg
         );
     };
 
-    const text = try arena.alloc(u8, timestamp.len + args_len + 1);
+    const text = try arena.alloc(u8, timestamp.len + args_len + 1); // +1 for \n later
     @memcpy(text[0..timestamp.len], timestamp);
 
     var pos = timestamp.len;
